@@ -91,8 +91,8 @@ def collate_fn_wrapper(batch):
 
 class ObjaverseData(Dataset):
     def __init__(self,
-        root_dir='obj_demo',
-        root_dir_new='',
+        root_dir='',
+        filtered_json='',
         meta_fname='valid_paths.json',
         high_metallic=False,
         input_image_dir='rendering_random_32views',
@@ -106,7 +106,7 @@ class ObjaverseData(Dataset):
         validation=False,
     ):
         self.root_dir = Path(root_dir)
-        self.root_dir_new = Path(root_dir_new)
+        self.filtered_json = filtered_json
         self.input_image_dir = input_image_dir
         self.target_image_dir = target_image_dir
         self.light_dir = light_dir
@@ -151,7 +151,7 @@ class ObjaverseData(Dataset):
 
         
         # self.paths = os.listdir(root_dir)
-        with open('/hpc2hdd/home/zchen379/sd3/objaverse_data/Mesh_final_valid_texturemap.json') as f:
+        with open(self.filtered_json) as f:
             filtered_dict = json.load(f)
             
         # with open('/hpc2hdd/home/zchen379/sd3/objaverse_data/Mesh_final_valid_texturemap.json') as f:
@@ -254,7 +254,7 @@ class ObjaverseData(Dataset):
             # if index <= self.num_old:
             #     obj_path = os.path.join(self.root_dir, self.paths[index])
             # else:
-            obj_path = os.path.join(self.root_dir_new, self.paths[index]+'.pth')
+            obj_path = os.path.join(self.root_dir, self.paths[index]+'.pth')
             if os.path.exists(obj_path):
                 pose_list = []
                 env_list = []
@@ -304,7 +304,7 @@ class ObjaverseData(Dataset):
 class ObjaverseData_test(Dataset):
     def __init__(self,
         root_dir='obj_demo',
-        root_dir_new='',
+        filtered_json = '',
         meta_fname='valid_paths.json',
         high_metallic=False,
         input_image_dir='rendering_random_32views',
@@ -318,7 +318,7 @@ class ObjaverseData_test(Dataset):
         validation=False,
     ):
         self.root_dir = Path(root_dir)
-        self.root_dir_new = Path(root_dir_new)
+        self.filtered_json = filtered_json
         self.input_image_dir = input_image_dir
         self.target_image_dir = target_image_dir
         self.light_dir = light_dir
@@ -467,7 +467,7 @@ class ObjaverseData_test(Dataset):
             # if index <= self.num_old:
             #     obj_path = os.path.join(self.root_dir, self.paths[index])
             # else:
-            obj_path = os.path.join(self.root_dir_new, self.paths[index])
+            obj_path = os.path.join(self.root_dir, self.paths[index])
             #breakpoint()
 
             if os.path.exists(obj_path):

@@ -66,8 +66,8 @@ from diffusers.utils.import_utils import is_xformers_available
 from dataset.blendGen import BlenderGenDataset, BlenderGenDataset_old, BlenderGenDataset_3mod, BlenderGenDataset_3mod_demo, BlenderGenDataset_3mod_demo_validation
 from dataset.objaverse import ObjaverseData, ObjaverseData_overfit_5
 # from utils_metrics.compute_t import compute_t
-from models.controlnet import ControlNetVAENoImgResOneCtlModel, _UnetDecControlModel, UNet2DConditionModel
-from models.pipeline import StableDiffusionControl2BranchFtudecPipeline
+from models.controlnet import AttributeEncoderModel, AttributeDecoderModel, UNet2DConditionModel
+from models.pipeline import UniRendererPipeline
 from utils_metrics.inception import InceptionV3
 from utils_metrics.calc_fid import calculate_frechet_distance, extract_features_from_samples
 from utils_metrics.metrics_util import SegMetric, NormalMetric, calculate_miou_per_batch
@@ -467,7 +467,7 @@ def log_validation(vae, text_encoder, tokenizer, unet, controlnet,
     controldec = accelerator.unwrap_model(controldec)
     unet = accelerator.unwrap_model(unet)
 
-    pipeline = StableDiffusionControl2BranchFtudecPipeline.from_pretrained(
+    pipeline = UniRendererPipeline.from_pretrained(
         args.pretrained_model_name_or_path,
         vae=vae,
         text_encoder=text_encoder,
@@ -506,39 +506,9 @@ def log_validation(vae, text_encoder, tokenizer, unet, controlnet,
     print("prediction type:", pipeline.scheduler_img.prediction_type)
     image_logs = []
 
-    # # Ensure that args.validation_image is a string path to the folder
-    # if isinstance(args.validation_image, list):
-    # # Check if the first element is a directory
-    #     if os.path.isdir(args.validation_image[0]):
-    #         image_folder = args.validation_image[0]
-    #     else:
-    #         # If it's a file, get the directory
-    #         image_folder = os.path.dirname(args.validation_image[0])
-    # else:
-    #     image_folder = args.validation_image  # Should be a string path
 
     resolution = args.resolution  # The desired resolution
 
-    # # Get a list of all image files in the folder (supports .png, .jpg, .jpeg)
-    # image_extensions = ('*.png')
-    # image_paths = []
-    # for ext in image_extensions:
-    #     image_paths.extend(glob(os.path.join(image_folder, ext)))
-    # # Create output folders if they don't exist
-    # output_base_path = args.output_dir # The given path where you want to create output folders
-
-    # # Ensure the output_base_path exists
-    # os.makedirs(output_base_path, exist_ok=True)
-
-    # # Define the output folders relative to output_base_path
-    # output_folders = ["metallic", "roughness", "albedo", "normal", "specular", "diffuse"]
-    # for folder in output_folders:
-    #     folder_path = os.path.join(output_base_path, folder)
-    #     os.makedirs(folder_path, exist_ok=True)
-    # prompts = ' '
-    # # Loop over each image
-    # for image_path in tqdm(image_paths[:-1], desc="Processing images"):
-    #     # Load and preprocess the image
     validation_img = Image.open(args.validation_image[0]).convert("RGB").resize((resolution, resolution))
     image_array = np.array(validation_img)
     prompts = ' '
@@ -561,11 +531,11 @@ def log_validation(vae, text_encoder, tokenizer, unet, controlnet,
 
     # Convert mask back to PIL Image
     validation_mask = Image.fromarray((masks[0] * 255).astype(np.uint8))
-    #breakpoint()
+
     # Process the image through the pipeline
     # Convert mask_array to a PyTorch tensor and move to GPU
     mask_array = np.array(validation_mask) / 255.0  # Normalize mask to [0, 1]
-    #mask_tensor = torch.from_numpy(mask_array).to(material.device)
+    
     with torch.autocast("cuda"):
         metallic_list = []
         roughness_list = []
@@ -593,20 +563,6 @@ def log_validation(vae, text_encoder, tokenizer, unet, controlnet,
         metallic_image = Image.fromarray(np.mean(metallic_list, axis=0).astype(np.uint8)) if compute_times > 1 else Image.fromarray(metallic_list[0].astype(np.uint8))
         roughness_image = Image.fromarray(np.mean(roughness_list, axis=0).astype(np.uint8)) if compute_times > 1 else Image.fromarray(roughness_list[0].astype(np.uint8))
 
-            # # Collect other outputs
-            # albedo_list.append(albedo.squeeze(0).permute(1, 2, 0).cpu().numpy())
-            # normal_list.append(normal.squeeze(0).permute(1, 2, 0).cpu().numpy())
-            # spec_light_list.append(spec_light.squeeze(0).permute(1, 2, 0).cpu().numpy())
-            # diff_light_list.append(diff_light.squeeze(0).permute(1, 2, 0).cpu().numpy())
-
-            # Average over compute_times if needed
-        # metallic_avg = np.mean(metallic_list, axis=0).astype(np.uint8)
-        # roughness_avg = np.mean(roughness_list, axis=0).astype(np.uint8)
-        # albedo_avg = np.mean(albedo_list, axis=0)
-        # normal_avg = np.mean(normal_list, axis=0)
-        # spec_light_avg = np.mean(spec_light_list, axis=0)
-        # diff_light_avg = np.mean(diff_light_list, axis=0)
-
         # Get the base filename without extension
         os.makedirs(args.output_dir, exist_ok=True)
         output_folders = ["metallic", "roughness", "albedo", "normal", "specular", "diffuse"]
@@ -614,10 +570,9 @@ def log_validation(vae, text_encoder, tokenizer, unet, controlnet,
             folder_path = os.path.join(args.output_dir, folder)
             os.makedirs(folder_path, exist_ok=True)
         base_filename = os.path.splitext(os.path.basename(args.validation_image[0]))[0]
-        #breakpoint()
+
         # Save outputs to their respective folders
         # Save metallic
-        # metallic_image = Image.fromarray(metallic_avg)
         metallic_image_path = os.path.join(args.output_dir, 'metallic', f'{base_filename}.png')
         metallic_image.save(metallic_image_path)
 
@@ -997,32 +952,6 @@ def parse_args(input_args=None):
     else:
         args = parser.parse_args()
 
-    # if args.dataset_name is None and args.train_data_dir is None:
-    #     raise ValueError("Specify either `--dataset_name` or `--train_data_dir`")
-
-    # if args.dataset_name is not None and args.train_data_dir is not None:
-    #     raise ValueError("Specify only one of `--dataset_name` or `--train_data_dir`")
-
-    # if args.proportion_empty_prompts < 0 or args.proportion_empty_prompts > 1:
-    #     raise ValueError("`--proportion_empty_prompts` must be in the range [0, 1].")
-
-    # if args.validation_prompt is not None and args.validation_image is None:
-    #     raise ValueError("`--validation_image` must be set if `--validation_prompt` is set")
-
-    # if args.validation_prompt is None and args.validation_image is not None:
-    #     raise ValueError("`--validation_prompt` must be set if `--validation_image` is set")
-
-    # if (
-    #     args.validation_image is not None
-    #     and args.validation_prompt is not None
-    #     and len(args.validation_image) != 1
-    #     and len(args.validation_prompt) != 1
-    #     and len(args.validation_image) != len(args.validation_prompt)
-    # ):
-    #     raise ValueError(
-    #         "Must provide either 1 `--validation_image`, 1 `--validation_prompt`,"
-    #         " or the same number of `--validation_prompt`s and `--validation_image`s"
-    #     )
 
     if args.resolution % 8 != 0:
         raise ValueError(
@@ -1088,22 +1017,6 @@ def main(args):
         )
 
 
-    # from torch.utils.data import random_split
-    # #train_dataset = BlenderGenDataset_old(root_dir=args.train_data_dir, mode='train', transform=transforms, resize=(256, 256))
-    # root_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/Objaverse_highQuality_singleObj_OBJ_Mesh_final_Full_valid'
-    # light_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/env_mipmap_gaint'
-    # #train_dataset = BlenderGenDataset_3mod_demo(root_dir=args.train_data_dir, mode='train', resize=(args.resolution, args.resolution), random_flip=False, random_crop=False)
-    # #train_dataset = ObjaverseData(root_dir=root_dir, light_dir=light_dir)
-    # train_dataset= ObjaverseData_overfit_5(root_dir=root_dir, light_dir=light_dir)
-
-    # # Calculate the sizes of train and test sets
-    # #train_size = int(0.9995 * len(train_dataset))
-    # #test_size = len(train_dataset) - train_size
-
-    # #train_dataset, test_dataset = random_split(train_dataset, [train_size, test_size])
-    # #train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batch_size, shuffle=True)
-    # test_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=False)
-
     # # import correct text encoder class
     text_encoder_cls = import_model_class_from_model_name_or_path(args.pretrained_model_name_or_path, args.revision)
 
@@ -1119,14 +1032,9 @@ def main(args):
 
     logger.info("Loading existing Unet, Controlnet, Controlnet Decoder weights")
     unet = UNet2DConditionModel.from_pretrained(args.controlnet_model_name_or_path, subfolder="unet")
-    controlnet = ControlNetVAENoImgResOneCtlModel.from_pretrained(args.controlnet_model_name_or_path, subfolder="controlnet")
-    controldec = _UnetDecControlModel.from_pretrained(args.controlnet_model_name_or_path, subfolder="controldec")
+    controlnet = AttributeEncoderModel.from_pretrained(args.controlnet_model_name_or_path, subfolder="controlnet")
+    controldec = AttributeDecoderModel.from_pretrained(args.controlnet_model_name_or_path, subfolder="controldec")
 
-    # vae.requires_grad_(False)
-    # unet.requires_grad_(False)
-    # text_encoder.requires_grad_(False)
-    # controlnet.train()
-    # controldec.train()
 
     # For mixed precision training we cast the text_encoder and vae weights to half-precision
     # as these models are only used for inference, keeping weights in full precision is not required.
@@ -1138,7 +1046,6 @@ def main(args):
 
     # Move vae, unet and text_encoder to device and cast to weight_dtype
     vae.to(accelerator.device, dtype=weight_dtype)
-    #unet.to(accelerator.device, dtype=weight_dtype)
     text_encoder.to(accelerator.device, dtype=weight_dtype)
 
     controlnet, controldec, unet = accelerator.prepare(controlnet, controldec, unet)
@@ -1157,20 +1064,7 @@ def main(args):
         img_guidance_scale=0, 
         mask_guidance_scale=0,
     )
-    # image_logs = log_validation(
-    #     vae,
-    #     text_encoder,
-    #     tokenizer,
-    #     unet,
-    #     controlnet,
-    #     controldec,
-    #     args,
-    #     accelerator,
-    #     weight_dtype,
-    #     'final',
-    #     img_guidance_scale=2.5, 
-    #     mask_guidance_scale=7.5,
-    # )
+
 
 
 if __name__ == "__main__":

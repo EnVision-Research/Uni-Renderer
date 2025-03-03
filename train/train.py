@@ -541,6 +541,30 @@ def parse_args(input_args=None):
         help="The output directory where the model predictions and checkpoints will be written.",
     )
     parser.add_argument(
+        "--dataset_root_dir",
+        type=str,
+        default="path to the data stores all objaverse data",
+        help="The directory where the objaverse data were stored",
+    )
+    parser.add_argument(
+        "--dataset_env_dir",
+        type=str,
+        default="path to the environment data",
+        help="The directory where the environment background data were stored",
+    )
+    parser.add_argument(
+        "--dataset_filter_obj_json",
+        type=str,
+        default="the json path to the training objects filterd in objaverse",
+        help="",
+    )
+    parser.add_argument(
+        "--dataset_test_obj_json",
+        type=str,
+        default="the json path to the training objects filterd in objaverse",
+        help="",
+    )
+    parser.add_argument(
         "--cache_dir",
         type=str,
         default=None,
@@ -909,12 +933,16 @@ def main(args):
     task_list = ['img', 'material_image', 'normal', 'light'] 
     from torch.utils.data import random_split
 
-    root_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/Objaverse_highQuality_singleObj_OBJ_Mesh_final_Full_valid'
-    root_dir_new = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/Objaverse_OBJ_Mesh_valid'
-    light_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/env_mipmap_gaint'
+    #root_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/Objaverse_highQuality_singleObj_OBJ_Mesh_final_Full_valid'
+    root_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/Objaverse_OBJ_Mesh_valid'
+    env_dir = '/hpc2hdd/JH_DATA/share/yingcongchen/PrivateShareGroup/yingcongchen_datasets/env_mipmap_gaint'
 
-    train_dataset = ObjaverseData(root_dir=root_dir, root_dir_new=root_dir_new, light_dir=light_dir, high_metallic=args.high_metallic)
-    test_dataset = ObjaverseData_test(root_dir=root_dir, root_dir_new=root_dir_new, light_dir=light_dir, high_metallic=args.high_metallic)
+    filtered_json_path = '/hpc2hdd/home/zchen379/sd3/objaverse_data/Mesh_final_valid_texturemap.json' 
+    test_json_path = '/hpc2hdd/home/zchen379/sd3/objaverse_data/test_ood_one.json'
+
+
+    train_dataset = ObjaverseData(root_dir=root_dir, filtered_json=filtered_json_path, light_dir=env_dir, high_metallic=args.high_metallic)
+    test_dataset = ObjaverseData_test(root_dir=root_dir, filtered_json=test_json_path, light_dir=env_dir, high_metallic=args.high_metallic)
 
 
     
