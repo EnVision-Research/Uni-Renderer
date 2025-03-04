@@ -91,9 +91,9 @@ pip install -r requirements.txt
 # OBJ files to mesh files that can be readed
 python obj2mesh.py path_to_obj save_path
 ```
-#For preprocessing environment maps, please run
+
 ```bash
-# Pre-process environment maps
+# For preprocessing environment maps, please run
 python light2map.py path_to_env save_path
 ```
 4. run the training script using `bash train.sh`
