@@ -192,7 +192,7 @@ def collate_fn(batch, single_obj=True):
     iter_spp = 1
     layers = 1
 
-    # # Initialize lists for input and target data
+    # # Initialize lists for input and target data 
     input_images, input_bg, input_alphas, input_depths, input_normals, input_albedos = [], [], [], [], [], []
     input_spec_light, input_diff_light, input_spec_albedo,input_diff_albedo = [], [], [], []
     input_w2cs, input_Ks, input_camera_pos, input_c2ws = [], [], [], []
