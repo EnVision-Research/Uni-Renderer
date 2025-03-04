@@ -30,7 +30,7 @@ By cross-conditioning two pretrained diffusion models through a dual streaming m
 <div align=center>
 <img src="docs/pipeline.png" width="80%"> 
 
-Overall Architecture
+Overall Architecture 
 </div>
 
 ## 💡 Inverse Rendering
