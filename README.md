@@ -28,16 +28,16 @@ Rendering and inverse rendering are pivotal tasks in both computer vision and gr
 By cross-conditioning two pretrained diffusion models through a dual streaming module, we achieve both rendering and inverse rendering in a unified framework.
 
 <div align=center>
-<img src="docs/pipeline.png" width="80%"> 
+<img src="assets/pipeline.png" width="80%"> 
 
 Overall Architecture 
 </div>
 
-## 💡 Inverse Rendering
-Decomposing a single RGB image into intrinsic properties (e.g., roughness, metallic, albedo, and lighting) using a dual-stream diffusion model, allowing for accurate material and lighting estimation while mitigating ambiguity through cycle-consistent constraints.
+## 💡 Religting 
+Decomposing a single RGB image into intrinsic properties (e.g., roughness, metallic, albedo, and lighting) using a dual-stream diffusion model, allowing for accurate re-lighting mitigating ambiguity through cycle-consistent constraints.
 
 <div align="center"> 
-<img src="docs/inverse.png" width="80%"> 
+<img src="assets/relight.png" width="80%"> 
 
 Inverse rendering results
 </div>
@@ -47,7 +47,7 @@ Leveraging intrinsic attributes such as material, geometry, and lighting conditi
 
 
 <div align="center"> 
-<img src="docs/rendering.png" width="80%"> 
+<img src="assets/rendering.png" width="80%"> 
 
  Rendering/editing results
 </div>
