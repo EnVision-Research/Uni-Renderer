@@ -98,15 +98,28 @@ python light2map.py path_to_env save_path
 ```
 4. run the training script using `bash train.sh`
 
-
-
-## 🚩 Features
+   
+# 🚩 Features
 - [✅] Release training code.
 - [✅] Project page launched.
 - [] Release model weights.
 - [] Release local gradio demo (more applications).
 
 
+# 📜 Citation
+If you find our work useful for your research or applications, please cite using this BibTeX:
+
+```BibTeX
+@article{chen2025unirendererunifyingrenderinginverse,
+      title={Uni-Renderer: Unifying Rendering and Inverse Rendering Via Dual Stream Diffusion}, 
+      author={Zhifei Chen and Tianshuo Xu and Wenhang Ge and Leyi Wu and Dongyu Yan and Jing He and Luozhou Wang and Lu Zeng and Shunsi Zhang and Yingcong Chen},
+      year={2025},
+      eprint={2412.15050},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.15050}, 
+}
+```
 
 
 
