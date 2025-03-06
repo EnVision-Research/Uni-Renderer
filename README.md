@@ -81,7 +81,7 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-# 💫 Training
+## 💫 Training
 
 1. We provide our dataset rendering code to facilitate future research. For training data, we used filtered Objaverse for training. Before training, you need to pre-processe the environment maps and OBJ files into formats that fit our dataloader.
 2. The .obj file can be downloaded in `https://objaverse.allenai.org/`
@@ -99,14 +99,14 @@ python light2map.py path_to_env save_path
 4. run the training script using `bash train.sh`
 
    
-# 🚩 Features
+## 🚩 Features
 - [✅] Release training code.
 - [✅] Project page launched.
 - [] Release model weights.
 - [] Release local gradio demo (more applications).
 
 
-# 📜 Citation
+## 📜 Citation
 If you find our work useful for your research or applications, please cite using this BibTeX:
 
 ```BibTeX
